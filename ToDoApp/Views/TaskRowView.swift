@@ -1,12 +1,6 @@
 import SwiftUI
 
 // MARK: - TaskRowView
-// Глупая (dumb) строка списка: только отображает Task и пробрасывает
-// действия наверх через замыкания. Никаких обращений к ViewModel/Repository —
-// это сохраняет иерархию View → ViewModel → Repository.
-// Цветовая индикация приоритета: синий / оранжевый / красный.
-// Выполненные задачи — strikethrough + приглушённый цвет.
-// Зависимости: SwiftUI, Models (Task, Priority).
 
 struct TaskRowView: View {
     let task: Task
@@ -15,7 +9,6 @@ struct TaskRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Кнопка-чекбокс: тап инвертирует isCompleted через ViewModel.
             Button(action: onToggle) {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.title2)
@@ -27,7 +20,6 @@ struct TaskRowView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(task.title)
                     .font(.headline)
-                    // Strikethrough для выполненных — требование ТЗ.
                     .strikethrough(task.isCompleted)
                     .foregroundStyle(task.isCompleted ? .secondary : .primary)
                     .lineLimit(2)
@@ -40,7 +32,6 @@ struct TaskRowView: View {
                 }
 
                 HStack(spacing: 8) {
-                    // Бейдж приоритета цветом.
                     Label(task.priority.displayName, systemImage: "flag.fill")
                         .font(.caption)
                         .foregroundStyle(priorityColor)
@@ -61,7 +52,6 @@ struct TaskRowView: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
-        // Тап по строке открывает редактирование.
         .onTapGesture(perform: onEdit)
         .accessibilityElement(children: .combine)
     }
@@ -76,7 +66,6 @@ struct TaskRowView: View {
         }
     }
 
-    /// Просрочка: есть дедлайн в прошлом и задача не выполнена.
     private var isOverdue: Bool {
         guard let dueDate = task.dueDate, !task.isCompleted else { return false }
         return dueDate < Date()

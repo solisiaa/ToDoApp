@@ -1,10 +1,6 @@
 import SwiftUI
 
 // MARK: - EditTaskView
-// Sheet редактирования + удаления. Поля инициализируются из Task в init —
-// правим локальные @State-копии, оригинал трогаем только по «Сохранить»
-// через ViewModel.applyEdit. Кнопка «Удалить» с confirmDialog от случайных тапов.
-// Зависимости: SwiftUI, ViewModels (TaskListViewModel), Models (Task, Priority).
 
 struct EditTaskView: View {
     @Environment(\.dismiss) private var dismiss
@@ -18,7 +14,6 @@ struct EditTaskView: View {
     @State private var priority: Priority
     @State private var isShowingDeleteConfirm = false
 
-    /// Snapshot полей задачи на момент открытия — отмена не меняет оригинал.
     init(viewModel: TaskListViewModel, task: Task) {
         self.viewModel = viewModel
         self.task = task
@@ -40,8 +35,6 @@ struct EditTaskView: View {
                     priority: $priority
                 )
 
-                // Кнопка удаления — вне Form, с отступом. Отделена от формы,
-                // чтобы случайный тап по «Сохранить» не превратился в удаление.
                 Button(role: .destructive) {
                     isShowingDeleteConfirm = true
                 } label: {

@@ -1,11 +1,6 @@
 import SwiftUI
 
-// MARK: - TaskFormFields
-// Общая форма «название + описание + дедлайн + приоритет» для Add/Edit.
-// Вынесена в отдельный View, чтобы не дублировать разметку в двух экранах.
-// Валидация: кнопка сохранения дизейблится при пустом title (trim),
-// дублируя проверку RepositoryError.emptyTitle на уровне UI.
-// Зависимости: SwiftUI, Models (Priority).
+// MARK: - TaskFormFields (общая форма для Add/Edit)
 
 struct TaskFormFields: View {
     @Binding var title: String
@@ -14,7 +9,6 @@ struct TaskFormFields: View {
     @Binding var dueDate: Date
     @Binding var priority: Priority
 
-    /// true, когда форму можно сохранять (непустой title).
     var isValid: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }

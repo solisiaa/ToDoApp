@@ -1,18 +1,10 @@
 import Foundation
 
-// MARK: - MockTaskRepository
-// In-memory реализация протокола для SwiftUI Preview и unit-тестов
-// (тесты видят её через @testable import ToDoApp).
-// Хранит задачи в обычном массиве — никакого SwiftData, никаких контейнеров.
-// Флаги shouldFail* позволяют тестировать ветку ошибок ViewModel (errorMessage).
-// Лежит в app-target осознанно: Preview компилируется вместе с приложением.
-// Зависимости: только Foundation + протокол и модели проекта.
+// MARK: - MockTaskRepository (in-memory, для Preview и тестов)
 
 @MainActor
 final class MockTaskRepository: TaskRepositoryProtocol {
-    /// Текущее «хранилище». Тесты могут предзаполнять напрямую.
     var storedTasks: [Task] = []
-    /// Если true — любой вызов бросает mockError (тест Alert/ошибок).
     var shouldFail = false
     var mockError: Error = RepositoryError.underlying(
         NSError(domain: "Mock", code: -1, userInfo: [NSLocalizedDescriptionKey: "Mock-ошибка"])
@@ -53,8 +45,6 @@ final class MockTaskRepository: TaskRepositoryProtocol {
 
     func update(_ task: Task) throws {
         if shouldFail { throw mockError }
-        // Mock хранит те же ссылки — объект уже мутирован вызывающим кодом.
-        // Проверяем, что задача известна хранилищу (защита от некорректных вызовов).
         guard storedTasks.contains(where: { $0.id == task.id }) else {
             throw RepositoryError.underlying(
                 NSError(domain: "Mock", code: 404, userInfo: [NSLocalizedDescriptionKey: "Задача не найдена"])

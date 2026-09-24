@@ -1,10 +1,6 @@
 import SwiftUI
 
 // MARK: - AddTaskView
-// Sheet создания задачи. Локальное @State для полей формы —
-// черновик живёт только пока открыт sheet и отбрасывается при Cancel.
-// Сохранение делегируется ViewModel.addTask (валидация + персистентность там).
-// Зависимости: SwiftUI, ViewModels (TaskListViewModel), Models (Priority).
 
 struct AddTaskView: View {
     @Environment(\.dismiss) private var dismiss
@@ -39,9 +35,6 @@ struct AddTaskView: View {
                             dueDate: hasDueDate ? dueDate : nil,
                             priority: priority
                         )
-                        // Sheet закрывается только при успехе:
-                        // addTask опускает isShowingAddSheet лишь после create без throw.
-                        // Дублируем dismiss для надёжности, если ViewModel управляет флагом.
                         if viewModel.errorMessage == nil {
                             dismiss()
                         }
@@ -58,6 +51,5 @@ struct AddTaskView: View {
 }
 
 #Preview {
-    // Preview с Mock-репозиторием — SwiftData-контейнер не нужен.
     AddTaskView(viewModel: TaskListViewModel(repository: MockTaskRepository()))
 }

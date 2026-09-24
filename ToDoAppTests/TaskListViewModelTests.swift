@@ -3,20 +3,11 @@ import Foundation
 @testable import ToDoApp
 
 // MARK: - TaskListViewModelTests
-// Unit-тесты ViewModel с MockTaskRepository — без SwiftData, без диска, без симулятора.
-// Mock лежит в app-target (Repositories/MockTaskRepository.swift) и виден через @testable.
-// Каждый тест: Arrange (mock + данные) → Act (вызов ViewModel) → Assert (состояние).
-// ViewModel и Mock — @MainActor, тесты swift-testing запускаются на main actor по умолчанию
-// для @MainActor-типов; явная изоляция не требуется.
-// Зависимости: Testing, ViewModels, Repositories (Mock), Models.
-//
-// ПОДКЛЮЧЕНИЕ: в Xcode File → New → Target → Unit Testing Bundle,
-// назвать ToDoAppTests, добавить этот файл в target.
+// Подключение: File → New → Target → Unit Testing Bundle, имя ToDoAppTests.
 
 struct TaskListViewModelTests {
     // MARK: Helpers
 
-    /// ViewModel с предзаполненным mock: 2 активные + 1 выполненная.
     @MainActor
     private func makeSUT() -> (TaskListViewModel, MockTaskRepository) {
         let done = Task(title: "Готовая", isCompleted: true)
@@ -41,7 +32,7 @@ struct TaskListViewModelTests {
     @MainActor
     func filterActiveHidesCompleted() {
         let (sut, _) = makeSUT()
-        sut.filter = .active // didSet сам вызывает reload()
+        sut.filter = .active
         #expect(sut.tasks.count == 2)
         #expect(sut.tasks.allSatisfy { !$0.isCompleted })
     }
@@ -189,7 +180,7 @@ struct TaskListViewModelTests {
         sut.reload()
         sut.selectDay(Date())
         let filtered = sut.tasks.count
-        sut.selectDay(Date()) // тот же день
+        sut.selectDay(Date())
         #expect(sut.selectedDay == nil)
         #expect(sut.tasks.count == 3)
         #expect(sut.tasks.count >= filtered)
@@ -201,7 +192,7 @@ struct TaskListViewModelTests {
         let mock = MockTaskRepository(tasks: [Task(title: "С дедлайном", dueDate: Date())])
         let sut = TaskListViewModel(repository: mock)
         sut.reload()
-        sut.selectDay(Date().addingTimeInterval(86400 * 30)) // день без задач
+        sut.selectDay(Date().addingTimeInterval(86400 * 30))
         #expect(sut.tasks.isEmpty)
         sut.clearDayFilter()
         #expect(sut.tasks.count == 1)

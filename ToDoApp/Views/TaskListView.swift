@@ -1,11 +1,6 @@
 import SwiftUI
 
 // MARK: - TaskListView
-// Главный экран. Работает ТОЛЬКО с ViewModel: никакого @Query/@FetchRequest
-// и прямого доступа к ModelContext — строго по архитектурному правилу №1, 2.
-// NavigationStack + Segmented Picker + ContentUnavailableView + свайп-экшены
-// (toggle, delete) + sheet-модалки Add/Edit + Alert ошибок из errorMessage.
-// Зависимости: SwiftUI, ViewModels (TaskListViewModel), Models (TaskFilter).
 
 struct TaskListView: View {
     @Bindable var viewModel: TaskListViewModel
@@ -13,7 +8,6 @@ struct TaskListView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Фильтрация Все / Активные / Выполненные.
                 Picker("Фильтр", selection: $viewModel.filter) {
                     ForEach(TaskFilter.allCases) { filter in
                         Text(filter.rawValue).tag(filter)
@@ -23,14 +17,12 @@ struct TaskListView: View {
                 .padding(.horizontal)
                 .padding(.top)
 
-                // Раскрывающаяся панель-календарь: месяц + выбор дня.
                 if viewModel.isCalendarVisible {
                     CalendarPanelView(viewModel: viewModel)
                         .padding(.horizontal)
                 }
 
                 if viewModel.tasks.isEmpty {
-                    // Пустое состояние вместо голого List.
                     ContentUnavailableView {
                         Label(emptyTitle, systemImage: emptyIcon)
                     } description: {
@@ -49,7 +41,6 @@ struct TaskListView: View {
                                 onToggle: { viewModel.toggle(task) },
                                 onEdit: { viewModel.taskToEdit = task }
                             )
-                            // Свайп влево: выполнить + удалить.
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                 Button(role: .destructive) {
                                     viewModel.delete(task)
@@ -66,7 +57,6 @@ struct TaskListView: View {
                                 }
                                 .tint(task.isCompleted ? .orange : .green)
                             }
-                            // Свайп вправо: редактировать.
                             .swipeActions(edge: .leading) {
                                 Button {
                                     viewModel.taskToEdit = task
@@ -83,8 +73,6 @@ struct TaskListView: View {
             }
             .navigationTitle("Задачи")
             .toolbar {
-                // Кнопка календаря: открывает/закрывает панель месяца.
-                // Залита синим, пока активен фильтр по дню.
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
                         viewModel.isCalendarVisible.toggle()
@@ -102,15 +90,12 @@ struct TaskListView: View {
                     }
                 }
             }
-            // CREATE: sheet добавления.
             .sheet(isPresented: $viewModel.isShowingAddSheet) {
                 AddTaskView(viewModel: viewModel)
             }
-            // UPDATE: sheet редактирования (item-based — закрытие сбрасывает taskToEdit в nil).
             .sheet(item: $viewModel.taskToEdit) { task in
                 EditTaskView(viewModel: viewModel, task: task)
             }
-            // Ошибки сохранения из ViewModel.
             .alert("Ошибка", isPresented: errorPresented) {
                 Button("OK") { viewModel.dismissError() }
             } message: {
@@ -124,7 +109,6 @@ struct TaskListView: View {
 
     // MARK: Empty state
 
-    /// Binding для Alert: показан, пока errorMessage != nil.
     private var errorPresented: Binding<Bool> {
         Binding(
             get: { viewModel.errorMessage != nil },
@@ -133,7 +117,6 @@ struct TaskListView: View {
     }
 
     private var emptyTitle: String {
-        // Day-фильтр приоритетнее: объясняем, что пусто именно в этот день.
         if viewModel.selectedDay != nil {
             viewModel.selectedDayTitle
         } else {

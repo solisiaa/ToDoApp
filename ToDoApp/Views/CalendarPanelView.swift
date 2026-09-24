@@ -1,16 +1,9 @@
 import SwiftUI
 
 // MARK: - CalendarPanelView
-// Панель-календарь: помесячная сетка + выбор дня для фильтрации списка.
-// Глупый View: всё состояние (selectedDay, дни с задачами) — во ViewModel,
-// локально хранится только отображаемый месяц (чисто UI-состояние).
-// Точки под числами = дни с дедлайнами (данные из viewModel.daysWithTasks).
-// Повторный тап по выбранному дню снимает фильтр (логика в selectDay).
-// Зависимости: SwiftUI, ViewModels (TaskListViewModel).
 
 struct CalendarPanelView: View {
     @Bindable var viewModel: TaskListViewModel
-    /// Какой месяц показан. По умолчанию — месяц выбранного дня или текущий.
     @State private var displayedMonth: Date
 
     private let calendar = Calendar.current
@@ -18,14 +11,12 @@ struct CalendarPanelView: View {
     init(viewModel: TaskListViewModel) {
         self.viewModel = viewModel
         let anchor = viewModel.selectedDay ?? Date()
-        // Начало месяца якорной даты.
         let comps = Calendar.current.dateComponents([.year, .month], from: anchor)
         _displayedMonth = State(initialValue: Calendar.current.date(from: comps) ?? anchor)
     }
 
     var body: some View {
         VStack(spacing: 8) {
-            // Шапка: месяц + навигация + «Сегодня».
             HStack {
                 Button {
                     displayedMonth = shiftedMonth(by: -1)
@@ -54,7 +45,6 @@ struct CalendarPanelView: View {
                 }
             }
 
-            // Дни недели (короткие, с учётом firstWeekday локали).
             HStack(spacing: 0) {
                 ForEach(weekdaySymbols, id: \.self) { symbol in
                     Text(symbol)
@@ -64,9 +54,7 @@ struct CalendarPanelView: View {
                 }
             }
 
-            // Сетка месяца: 7 колонок, ячейки с точками.
-            // Итерация по индексам: пустых ячеек (nil) несколько,
-            // и у них был бы одинаковый id — SwiftUI не допускает дублей.
+            // По индексам: у пустых ячеек (nil) одинаковый id, SwiftUI не допускает дублей
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: 2) {
                 ForEach(monthCells.indices, id: \.self) { index in
                     if let date = monthCells[index] {
@@ -83,7 +71,6 @@ struct CalendarPanelView: View {
                 }
             }
 
-            // Подвал: статус фильтра + сброс.
             if viewModel.selectedDay != nil {
                 HStack {
                     Text("Задачи на \(viewModel.selectedDayTitle): \(viewModel.tasks.count)")
@@ -101,19 +88,16 @@ struct CalendarPanelView: View {
 
     // MARK: Helpers
 
-    /// Короткие символы дней недели, повёрнутые под firstWeekday (в RU — понедельник).
     private var weekdaySymbols: [String] {
         let symbols = calendar.veryShortStandaloneWeekdaySymbols
-        let first = calendar.firstWeekday - 1 // 0-based
+        let first = calendar.firstWeekday - 1
         return Array(symbols[first...] + symbols[..<first])
     }
 
-    /// Ячейки месяца: nil = пустая клетка до 1-го числа.
     private var monthCells: [Date?] {
         guard let range = calendar.range(of: .day, in: .month, for: displayedMonth),
               let firstDate = calendar.date(from: calendar.dateComponents([.year, .month], from: displayedMonth))
         else { return [] }
-        // Сдвиг первого дня с учётом firstWeekday.
         let leading = (calendar.component(.weekday, from: firstDate) - calendar.firstWeekday + 7) % 7
         var cells: [Date?] = Array(repeating: nil, count: leading)
         for day in range {
@@ -145,7 +129,6 @@ struct CalendarPanelView: View {
 }
 
 // MARK: - DayCell
-// Одна клетка дня: число + синий круг если выбран + точка если есть задачи + жирное если сегодня.
 
 private struct DayCell: View {
     let date: Date
@@ -161,7 +144,6 @@ private struct DayCell: View {
                 .foregroundStyle(isSelected ? .white : .primary)
                 .frame(width: 30, height: 30)
                 .background(isSelected ? Color.blue : Color.clear, in: Circle())
-            // Точка-маркер: видна всегда, если есть задачи (под синим кругом — белая).
             Circle()
                 .fill(hasTasks ? (isSelected ? .white : .blue) : .clear)
                 .frame(width: 4, height: 4)

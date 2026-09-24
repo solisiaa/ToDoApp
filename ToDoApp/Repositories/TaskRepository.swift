@@ -2,17 +2,11 @@ import Foundation
 import SwiftData
 
 // MARK: - TaskRepository
-// Единственное место, знающее о SwiftData. ModelContext приходит извне
-// (инжектится из View через @Environment), сам репозиторий контекст не создаёт.
-// @MainActor: ModelContext привязан к main actor — все операции выполняем на нём.
-// Решение: вся работа с FetchDescriptor/сортировкой инкапсулирована здесь,
-// ViewModel получает готовый отсортированный массив и ничего не знает о SwiftData.
 
 @MainActor
 final class TaskRepository: TaskRepositoryProtocol {
     private let context: ModelContext
 
-    /// - Parameter context: ModelContext из @Environment (см. ToDoAppApp).
     init(context: ModelContext) {
         self.context = context
     }
@@ -20,7 +14,6 @@ final class TaskRepository: TaskRepositoryProtocol {
     // MARK: READ
 
     func fetch(filter: TaskFilter) throws -> [Task] {
-        // Сортировка: новые сверху. Предикат строится по фильтру.
         let sort = SortDescriptor<Task>(\.createdAt, order: .reverse)
         let descriptor: FetchDescriptor<Task>
         switch filter {
@@ -54,8 +47,6 @@ final class TaskRepository: TaskRepositoryProtocol {
         priority: Priority = .medium,
         category: Category? = nil
     ) throws -> Task {
-        // Валидация на границе слоя данных — защищает от пустых записей
-        // при любом вызывающем коде, не только из формы.
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             throw RepositoryError.emptyTitle
@@ -74,8 +65,6 @@ final class TaskRepository: TaskRepositoryProtocol {
 
     // MARK: UPDATE
 
-    /// Task уже отслеживается контекстом (объект из fetch), поэтому
-    /// достаточно вызвать save — SwiftData подхватит изменённые поля.
     func update(_ task: Task) throws {
         let trimmed = task.title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
